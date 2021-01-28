@@ -51,6 +51,7 @@ export default {
         }
     },
     methods:{
+        //重置
         resetLoginForm(){
             this.$refs.loginFormRef.resetFields();
         },
