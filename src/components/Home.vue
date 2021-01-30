@@ -4,7 +4,7 @@
     <el-header>
       <div>
         <img class="home_logo" src="../assets/logo.png" alt="" />
-        <span>电商后台管理系统</span>
+        <span>后台用户管理系统</span>
       </div>
       <el-button type="info" @click="logout">退出</el-button>
     </el-header>
@@ -26,7 +26,7 @@
           :default-active="activePath"
         >
           <!-- 一级菜单 -->
-          <el-submenu :index="''+item.id" v-for="item in menulist" :key="item.id">
+          <el-submenu :index="''+item.id" v-for="item of menulist.slice(0,2)" :key="item.id">
             <!-- 一级菜单的模板区 -->
             <template slot="title">
               <!-- 图标 -->
@@ -69,7 +69,7 @@ export default {
                 '102':'el-icon-s-claim',
                 '145':'el-icon-s-data'
             },
-            activePath:''
+            activePath:'',
         }
     },
     created(){//生命周期函数，页面刚一加载的时候就要立即获取左侧菜单
