@@ -70,6 +70,7 @@
               :enterable="false"
             >
               <el-button
+                @click="setRole(scope.row)"
                 type="warning"
                 icon="el-icon-setting"
                 size="mini"
@@ -161,6 +162,33 @@
       </span>
     </el-dialog>
 
+    <!-- 分配角色的对话框-->
+    <el-dialog
+      @close="setRoleClose"
+      title="分配角色"
+      :visible.sync="setRoledialogVisible"
+      width="50%"
+    >
+      <div>
+        <p>当前用户：{{ userInfo.username }}</p>
+        <p>当前角色：{{ userInfo.role_name }}</p>
+        <p>
+          分配新角色：
+          <el-select v-model="selectedRoleId" placeholder="请选择">
+            <el-option
+              v-for="item in rolesList"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            ></el-option>
+          </el-select>
+        </p>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRoledialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveRole">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -191,6 +219,11 @@ export default {
       cb(new Error("请输入合法的电话"));
     };
     return {
+      //控制分配角色的对话框的显示
+      setRoledialogVisible: false,
+      userInfo: {},
+      selectedRoleId: "",
+      rolesList: [],
       //控制修改用户的对话框的显示
       resetDialogVisible: false,
       resetuserForm: {
@@ -256,26 +289,30 @@ export default {
   },
   methods: {
     //根据id删除用户
-    async deletUser(id){
-      const confirmInfo=await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).catch(err => err);
-
-        //确认删除返回字符串confirm,取消删除返回字符串 cancel
-        if(confirmInfo!=='confirm') return this.$message.info('已取消删除');
-        else {
-          //提交删除请求
-          const{data:res}=await this.$http.delete('users/'+id);
-
-          if(res.meta.status !==200) return this.$message.error('提交删除请求失败');
-          else {
-            this.getUserList();
-            this.$message.success('已成功删除');
-          }
-          
+    async deletUser(id) {
+      const confirmInfo = await this.$confirm(
+        "此操作将永久删除该用户, 是否继续?",
+        "提示",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
         }
+      ).catch((err) => err);
+
+      //确认删除返回字符串confirm,取消删除返回字符串 cancel
+      if (confirmInfo !== "confirm") return this.$message.info("已取消删除");
+      else {
+        //提交删除请求
+        const { data: res } = await this.$http.delete("users/" + id);
+
+        if (res.meta.status !== 200)
+          return this.$message.error("提交删除请求失败");
+        else {
+          this.getUserList();
+          this.$message.success("已成功删除");
+        }
+      }
     },
     //根据id获取对应用户信息
     async getUserFormById(id) {
@@ -300,7 +337,7 @@ export default {
               mobile: this.resetuserForm.mobile,
             }
           );
-          console.log(res);
+          // console.log(res);
           if (res.meta.status != 200)
             return this.$message.error("提交修改表单失败");
           else {
@@ -320,7 +357,7 @@ export default {
         if (!valid) return this.$message.error("填写信息错误或不合规则");
         //可以发起添加用户的网络请求
         const { data: res } = await this.$http.post("users", this.userForm);
-        console.log(res);
+        // console.log(res);
         if (res.meta.status !== 201) {
           this.$message.error("添加用户失败");
         } else this.$message.success("添加用户成功");
@@ -358,17 +395,53 @@ export default {
     },
     // 监听switch开关状态的改变
     async userStateChanged(userinfo) {
-      // console.log(userinfo);
       //为了方便拼接参数把单引号修改成反引号 ``
       const { data: res } = await this.$http.put(
-        `users/${userinfo.id}/state/{userifo.mg_state}`
+        `users/${userinfo.id}/state/${userinfo.mg_state}`
       );
-      if (res.meta.status !== 200) {
-        //操作失败提示用户，并将状态取反改回
+      if (res.meta.status != 200) {
+        //操作失败提示用户,并取反状态
         userinfo.mg_state = !userinfo.mg_state;
         return this.$message.error("更新用户状态失败");
       }
-      this.$message.success("更新用户状态成功");
+      this.$message.success("更新用户状态成功！");
+    },
+    //分配用户权限
+     async setRole(userinfo) {
+      this.userInfo = userinfo;
+      const { data: res } = await this.$http.get("roles");
+      if (res.meta.status != 200) {
+        return this.$message.error("获取用户角色失败！");
+      }
+      this.$message.success("获取用户角色成功！")
+      this.rolesList = res.data;
+      this.setRoledialogVisible = true;
+    },
+    async saveRole() {
+      if (!this.selectedRoleId) {
+        return this.$message.error("请选择要分配的角色！");
+      }
+      console.log(this.userInfo.id);
+      const {
+        data: res,
+      } = await this.$http.put(`users/${this.userInfo.id}/role`, {
+        rid: this.selectedRoleId,
+      });
+      if (res.meta.status == 400) {
+        console.log(res);
+        return this.$message.error(res.meta.msg);      
+      }
+      else if(res.meta.status !=200){
+        return this.$message.error(res.meta.msg)
+      }
+      this.$message.success("更新用户角色成功！");
+      this.setRoledialogVisible = false;
+
+      this.getUserList();
+    },
+    setRoleClose() {
+      this.selectedRoleId = "";
+      this.userInfo = {};
     },
   },
 };
