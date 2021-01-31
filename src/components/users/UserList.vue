@@ -426,7 +426,7 @@ export default {
       if (!this.selectedRoleId) {
         return this.$message.error("请选择要分配的角色！");
       }
-      console.log(this.userInfo.id);
+      // console.log(this.userInfo.id);
       const { data: res } = await this.$http.put(
         `users/${this.userInfo.id}/role`,
         {

@@ -4,7 +4,7 @@
     <el-header>
       <div>
         <img class="home_logo" src="../assets/logo.png" alt="" />
-        <span>后台用户管理系统</span>
+        <span>用户后台管理系统</span>
       </div>
       <el-button type="info" @click="logout">退出</el-button>
     </el-header>
@@ -14,7 +14,7 @@
       <el-aside :width="isCollapse ? '64px':'200px'">
         <!-- 侧边栏菜单区域 -->
         <!-- 折叠框 -->
-        <div class="toggle-button" @click="toggleClose">| | |</div>
+        <div class="toggle-button" @click="toggleClose">点击折叠</div>
         <el-menu
           background-color="#545c64"
           text-color="#fff"
@@ -84,9 +84,9 @@ export default {
     //获取所有菜单
     async getMenuList(){
        const{data:res} =await this.$http.get('menus');
-       if(res.meta.status !== 200) return this.$message.errp(res.meta.msg);
+       if(res.meta.status !== 200) return this.$message.error(res.meta.msg);
        this.menulist =res.data;
-       console.log(res);
+      //  console.log(res);
     },
     toggleClose(){
         this.isCollapse=!this.isCollapse;
