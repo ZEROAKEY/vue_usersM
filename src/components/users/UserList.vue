@@ -221,8 +221,11 @@ export default {
     return {
       //控制分配角色的对话框的显示
       setRoledialogVisible: false,
+      //需要被分配角色的用户信息
       userInfo: {},
+      //已选中的角色id值
       selectedRoleId: "",
+      //所有角色的数据列表
       rolesList: [],
       //控制修改用户的对话框的显示
       resetDialogVisible: false,
@@ -407,32 +410,31 @@ export default {
       this.$message.success("更新用户状态成功！");
     },
     //分配用户权限
-     async setRole(userinfo) {
+    async setRole(userinfo) {
       this.userInfo = userinfo;
+      //在展示对话框之前获取所有角色的列表
       const { data: res } = await this.$http.get("roles");
       if (res.meta.status != 200) {
         return this.$message.error("获取用户角色失败！");
       }
-      this.$message.success("获取用户角色成功！")
+      this.$message.success("获取用户角色成功！");
       this.rolesList = res.data;
       this.setRoledialogVisible = true;
     },
+    //点击按钮分配角色
     async saveRole() {
       if (!this.selectedRoleId) {
         return this.$message.error("请选择要分配的角色！");
       }
       console.log(this.userInfo.id);
-      const {
-        data: res,
-      } = await this.$http.put(`users/${this.userInfo.id}/role`, {
-        rid: this.selectedRoleId,
-      });
-      if (res.meta.status == 400) {
-        console.log(res);
-        return this.$message.error(res.meta.msg);      
-      }
-      else if(res.meta.status !=200){
-        return this.$message.error(res.meta.msg)
+      const { data: res } = await this.$http.put(
+        `users/${this.userInfo.id}/role`,
+        {
+          rid: this.selectedRoleId,
+        }
+      );
+      if (res.meta.status !== 200) {
+        return this.$message.error(res.meta.msg);
       }
       this.$message.success("更新用户角色成功！");
       this.setRoledialogVisible = false;
